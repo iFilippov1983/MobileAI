@@ -1,6 +1,8 @@
 ﻿public enum DataType
 {
+    None,
     Money,
     Health,
-    Power
+    Power,
+    Stealth
 }
