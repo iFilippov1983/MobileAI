@@ -6,12 +6,14 @@ public class UiPlayerListener : IEnemyDataUpdater, IObserver<PlayerDataStock>
     private readonly TMP_Text _moneyText;
     private readonly TMP_Text _healthText;
     private readonly TMP_Text _powerText;
+    private readonly TMP_Text _stealthText;
 
-    public UiPlayerListener(TMP_Text moneyText, TMP_Text healthText, TMP_Text powerText)
+    public UiPlayerListener(TMP_Text moneyText, TMP_Text healthText, TMP_Text powerText, TMP_Text stealthText)
     {
         _moneyText = moneyText;
         _healthText = healthText;
         _powerText = powerText;
+        _stealthText = stealthText;
     }
 
     public void OnCompleted() { }
@@ -32,6 +34,9 @@ public class UiPlayerListener : IEnemyDataUpdater, IObserver<PlayerDataStock>
                 break;
             case DataType.Power:
                 _powerText.text = $"Player power: {playerData.Value}";
+                break;
+            case DataType.Stealth:
+                _stealthText.text = $"Player stealth: {playerData.Value}";
                 break;
         }
     }

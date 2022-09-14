@@ -11,8 +11,12 @@ public class FightWindowView : MonoBehaviour, IObserver<PlayerDataStock>
     [SerializeField] private TMP_Text _countMoneyText;
     [SerializeField] private TMP_Text _countHealthText;
     [SerializeField] private TMP_Text _countPowerText;
+    [SerializeField] private TMP_Text _countStealthText;
 
     [SerializeField] private TMP_Text _countPowerEnemyText;
+    [SerializeField] private TMP_Text _playerVisibilityText;
+
+    [SerializeField] private TMP_Text _fightText;
 
     [SerializeField] private Button _addMoneyButton;
     [SerializeField] private Button _minusMoneyButton;
@@ -23,6 +27,9 @@ public class FightWindowView : MonoBehaviour, IObserver<PlayerDataStock>
     [SerializeField] private Button _addPowerButton;
     [SerializeField] private Button _minusPowerButton;
 
+    [SerializeField] private Button _addStealthButton;
+    [SerializeField] private Button _minusStealthButton;
+
     [SerializeField] private Button _fightButton;
 
     private Enemy _enemy;
@@ -31,30 +38,26 @@ public class FightWindowView : MonoBehaviour, IObserver<PlayerDataStock>
     private Money _money;
     private Health _health;
     private Power _power;
+    private Stealth _stealth;
 
     private List<IDisposable> _disposables = new List<IDisposable>();
 
     private void Start()
     {
         _enemy = new Enemy(_enemyProperties);
-        _uiListener = new UiPlayerListener(_countMoneyText, _countHealthText, _countPowerText);
+        _uiListener = new UiPlayerListener(_countMoneyText, _countHealthText, _countPowerText, _countStealthText);
 
         _money = new Money();
         _money.Subscribe(_enemy, _uiListener, this);
-        //_money.Subscribe(_enemy);
-        //_money.Subscribe(_uiListener);
-        //_money.Subscribe(this);
-
 
         _health = new Health();
-        _health.Subscribe(_enemy);
-        _health.Subscribe(_uiListener);
-        _health.Subscribe(this);
+        _health.Subscribe(_enemy, _uiListener, this);
 
         _power = new Power();
-        _power.Subscribe(_enemy);
-        _power.Subscribe(_uiListener);
-        _power.Subscribe(this);
+        _power.Subscribe(_enemy, _uiListener, this);
+
+        _stealth = new Stealth();
+        _stealth.Subscribe(_enemy, _uiListener, this);
 
         _addMoneyButton.onClick.AddListener(() => ChangeValueOf(_money.DataType, 1));
         _minusMoneyButton.onClick.AddListener(() => ChangeValueOf(_money.DataType, -1));
@@ -65,11 +68,16 @@ public class FightWindowView : MonoBehaviour, IObserver<PlayerDataStock>
         _addPowerButton.onClick.AddListener(() => ChangeValueOf(_power.DataType, 1));
         _minusPowerButton.onClick.AddListener(() => ChangeValueOf(_power.DataType, -1));
 
-        _fightButton.onClick.AddListener(Fight);
+        _addStealthButton.onClick.AddListener(() => ChangeValueOf(_stealth.DataType, 1));
+        _minusStealthButton.onClick.AddListener(() => ChangeValueOf(_stealth.DataType, -1));
+
+        _fightButton.onClick.AddListener(FightOrSneak);
 
         _disposables.Add(_money);
         _disposables.Add(_health);
         _disposables.Add(_power);
+
+        UpdateEnemyDataWindow();
     }
 
     private void OnDestroy()
@@ -83,10 +91,26 @@ public class FightWindowView : MonoBehaviour, IObserver<PlayerDataStock>
         _addPowerButton.onClick.RemoveAllListeners();
         _minusPowerButton.onClick.RemoveAllListeners();
 
+        _addStealthButton.onClick.RemoveAllListeners();
+        _minusStealthButton.onClick.RemoveAllListeners();
+
         _fightButton.onClick.RemoveAllListeners();
 
         foreach(var d in _disposables)
             d.Dispose();
+    }
+
+    private void FightOrSneak()
+    {
+        if (_enemy.SeesPlayer)
+            Fight();
+        else
+            Sneak();
+    }
+
+    private void Sneak()
+    {
+        Debug.Log("<color=blue>..Sneaked..</color>");
     }
 
     private void Fight()
@@ -111,11 +135,29 @@ public class FightWindowView : MonoBehaviour, IObserver<PlayerDataStock>
             case DataType.Power:
                 _power.Value += value;
                 break;
+            case DataType.Stealth:
+                _stealth.Value += value;
+                break;
         }
     }
 
-    private void UpdateEnemyDataWindow() => _countPowerEnemyText.text = $"Enemy power: {_enemy.Power}";
-    public void OnNext(PlayerDataStock playerData) => UpdateEnemyDataWindow();
+    private void UpdateEnemyDataWindow()
+    {
+        _countPowerEnemyText.text = $"Enemy power: {_enemy.Power}";
+        _playerVisibilityText.text = _enemy.SeesPlayer
+            ? "[Sees player]"
+            : "[Doesn't see player]";
+
+        _fightText.text = _enemy.SeesPlayer
+            ? "FIGHT"
+            : "SNEAK";
+    }
+
+    public void OnNext(PlayerDataStock playerData)
+    {
+        UpdateEnemyDataWindow();
+    }
+
     public void OnCompleted() { }
     public void OnError(Exception error) => throw error;
 }

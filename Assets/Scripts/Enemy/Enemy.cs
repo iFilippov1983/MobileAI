@@ -11,6 +11,7 @@ public class Enemy : IEnemyDataUpdater, IObserver<PlayerDataStock>
     private int _moneyValuePlayer;
     private int _healthValuePlayer;
     private int _powerValuePlayer;
+    private int _stealthValuePlayer;
 
     public Enemy(EnemyProperties properties)
     {
@@ -29,6 +30,11 @@ public class Enemy : IEnemyDataUpdater, IObserver<PlayerDataStock>
         }
     }
 
+    public bool SeesPlayer
+    {
+        get => _stealthValuePlayer <= (_healthValuePlayer + _powerValuePlayer) / _properties.K_Stealth + 1;
+    }
+
     public void OnCompleted() { }
     public void OnError(Exception error) => throw error;
     public void OnNext(PlayerDataStock playerData) => Update(playerData, playerData.DataType);
@@ -39,17 +45,17 @@ public class Enemy : IEnemyDataUpdater, IObserver<PlayerDataStock>
         {
             case DataType.None:
                 break;
-
             case DataType.Health:
                 _healthValuePlayer = playerData.Value;
                 break;
-
             case DataType.Money:
                 _moneyValuePlayer = playerData.Value;
                 break;
-
             case DataType.Power:
                 _powerValuePlayer = playerData.Value;
+                break;
+            case DataType.Stealth:
+                _stealthValuePlayer = playerData.Value;
                 break;
         }
 

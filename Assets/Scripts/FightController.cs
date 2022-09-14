@@ -17,8 +17,5 @@ public class FightController
         _player = new Player();
     }
 
-    private void Init()
-    { 
-        
-    }
+    //...
 }

@@ -14,4 +14,5 @@ public class Root : MonoBehaviour
         _player = new Player();
         _fightController = new FightController(_enemyProperties);
     }
+    //...
 }
